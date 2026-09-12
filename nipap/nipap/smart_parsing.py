@@ -268,7 +268,8 @@ class SmartParser:
         if self.allow_avp_search and key.startswith('avp.'):
             if not key[4:] or op not in ('=', '!='):
                 dictsql['interpretation']['error'] = True
-                dictsql['interpretation']['error_message'] = 'AVP searches require a key and = or !='
+                dictsql['interpretation']['error_message'] = (
+                    'AVP searches require a key and = or !=')
                 success = False
         elif key in self.attributes:
             if isinstance(self.attributes[key], list):
@@ -457,12 +458,14 @@ class PrefixSmartParser(SmartParser):
         """
         self._logger.debug("parsing string: %s of type: %s", part[0], part.getName())
 
-        if part.getName() == 'word' and part[0].startswith('avp.') and part[0][4:]:
+        if (part.getName() == 'word' and part[0].startswith('avp.')
+                and part[0][4:]):
             return {
                 'operator': 'avp_exists', 'val1': part[0], 'val2': True,
                 'interpretation': {
                     'string': part[0], 'interpretation': 'AVP key exists',
-                    'attribute': part[0], 'operator': 'avp_exists', 'error': False,
+                    'attribute': part[0],
+                    'operator': 'avp_exists', 'error': False,
                 },
             }
 
