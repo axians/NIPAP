@@ -20,7 +20,7 @@ DAEMON_NAME=nipapd
 
 . /lib/lsb/init-functions
 
-RUN=no
+RUN=yes
 # include defaults if available
 if [ -f /etc/default/nipapd ]; then
 	. /etc/default/nipapd

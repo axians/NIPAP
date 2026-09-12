@@ -1,0 +1,23 @@
+[Unit]
+Description=NIPAP IP address management API
+Documentation=man:nipapd(8)
+After=network.target postgresql.service
+
+[Service]
+Type=exec
+User=nipap
+Group=nipap
+SupplementaryGroups=ssl-cert
+UMask=0077
+ExecCondition=/usr/lib/nipap/nipapd-systemd --check
+ExecStart=/usr/lib/nipap/nipapd-systemd
+KillMode=control-group
+Restart=on-failure
+RestartSec=10s
+TimeoutStopSec=30s
+NoNewPrivileges=true
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,4 +1,5 @@
 #!/usr/bin/make -f
+export PYBUILD_SYSTEM=pyproject
 
 #export DH_VERBOSE=1
 #export PYBUILD_NAME=nipap-cli

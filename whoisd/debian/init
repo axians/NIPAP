@@ -21,7 +21,7 @@ DEFAULTS=/etc/default/nipap-whoisd
 
 . /lib/lsb/init-functions
 
-RUN=no
+RUN=yes
 # include defaults if available
 if [ -f $DEFAULTS ]; then
 	. $DEFAULTS
@@ -76,7 +76,7 @@ case "$1" in
 			log_end_msg 0
 		fi
 		;;
-	restart)
+	restart|force-reload)
 		log_daemon_msg "Restarting $LONGNAME" "$NAME"
 		RUNNING=$(running)
 		if [ -n "$RUNNING" ]; then

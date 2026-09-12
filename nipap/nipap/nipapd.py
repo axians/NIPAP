@@ -67,14 +67,19 @@ signal.signal(signal.SIGTERM, handle_sigterm)
 
 
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
-    if os.getuid() != 0:
-        raise NipapError("non-root user cannot drop privileges")
-
     import pwd
     import grp
     # Get the uid/gid from the name
     uid = pwd.getpwnam(uid_name).pw_uid
     gid = grp.getgrnam(gid_name).gr_gid
+
+    # A service manager may already have selected the configured identity.
+    # Preserve its supplementary groups (for example ssl-cert).
+    if os.geteuid() != 0:
+        if os.geteuid() != uid or os.getegid() != gid:
+            raise NipapError("process identity does not match configured user/group")
+        os.umask(0o077)
+        return
 
     # Remove group privileges
     os.setgroups([])
@@ -107,7 +112,7 @@ def run():
     parser.add_argument("--db-version", dest="dbversion", action="store_true",
                         help="display database schema version information and exit")
     # Arguments overwriting config settings
-    cfg_args = ['debug', 'foreground', 'port', 'config_file']
+    cfg_args = ['debug', 'foreground', 'port', 'ssl_port', 'listen', 'config_file']
 
     args = parser.parse_args()
 
@@ -146,10 +151,10 @@ def run():
     setup_plaintext = cfg.get('nipapd', 'port') != ''
     setup_ssl = cfg.get('nipapd', 'ssl_port') != ''
     if not setup_plaintext and not setup_ssl:
-        print >> sys.stderr, "ERROR: Configured to listen to neither plaintext nor SSL"
+        print("ERROR: Configured to listen to neither plaintext nor SSL", file=sys.stderr)
         sys.exit(1)
-    if setup_ssl and cfg.get('nipapd', 'ssl_cert_file') is None:
-        print >> sys.stderr, "ERROR: ssl_port configured but ssl_cert_file missing"
+    if setup_ssl and not cfg.get('nipapd', 'ssl_cert_file'):
+        print("ERROR: ssl_port configured but ssl_cert_file missing", file=sys.stderr)
         sys.exit(1)
 
     # drop privileges
@@ -163,11 +168,22 @@ def run():
             drop_privileges(run_user, run_group)
         except NipapError:
             print(("nipapd is configured to drop privileges and run as user '%s' and group '%s', \n"
-                   "but was not started as root and can therefore not drop privileges") % (run_user, run_group),
+                   "but its current user/group do not match and it cannot change them without root") % (run_user, run_group),
                   file=sys.stderr)
             sys.exit(1)
         except KeyError:
             print("Could not drop privileges to user '%s' and group '%s'" % (run_user, run_group), file=sys.stderr)
+            sys.exit(1)
+
+    # Check TLS access before database setup, socket binding or worker forks.
+    # An empty key path means the key is bundled with the certificate.
+    if setup_ssl:
+        ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        try:
+            ssl_ctx.load_cert_chain(cfg.get('nipapd', 'ssl_cert_file'),
+                                    keyfile=cfg.get('nipapd', 'ssl_key_file') or None)
+        except (OSError, ssl.SSLError) as err:
+            logger.error("TLS initialization failed: %s", err)
             sys.exit(1)
 
     from nipap.backend import Nipap
@@ -384,14 +400,6 @@ def run():
         http_server.add_sockets(sockets)
 
     if setup_ssl:
-        ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        try:
-            ssl_ctx.load_cert_chain(cfg.get("nipapd", "ssl_cert_file"),
-                                    keyfile=cfg.get("nipapd", "ssl_key_file"))
-        except ssl.SSLError as err:
-            logging.error("SSL Initialization failed: %s", err)
-            sys.exit(1)
-
         https_server = HTTPServer(WSGIContainer(app), ssl_options=ssl_ctx)
         https_server.add_sockets(ssl_sockets)
 

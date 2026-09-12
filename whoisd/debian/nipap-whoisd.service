@@ -1,0 +1,16 @@
+[Unit]
+Description=NIPAP whois server
+Documentation=man:nipap-whoisd(8)
+After=network.target nipapd.service
+ConditionPathExists=/etc/nipap/whoisd.conf
+
+[Service]
+Type=exec
+# The daemon binds port 43, then changes to the identity in whoisd.conf.
+ExecStart=/usr/bin/nipap-whoisd --foreground --no-pid-file --config /etc/nipap/whoisd.conf
+KillMode=control-group
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

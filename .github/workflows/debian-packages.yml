@@ -1,0 +1,66 @@
+name: Debian 13 packages
+
+on:
+  pull_request:
+  push:
+    branches: [master, 'deb13-*']
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: debian-packages-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Debian 13 / ${{ matrix.project }}
+    runs-on: ubuntu-24.04
+    # pbuilder needs mount and namespace access for its isolated build chroot.
+    container:
+      image: debian:trixie
+      options: --privileged
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [nipap, pynipap, nipap-cli, nipap-www, whoisd]
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Install Debian packaging tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates git pbuilder debootstrap debian-archive-keyring \
+            dpkg-dev lintian xz-utils
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Build source package and binaries in a clean Debian chroot
+        env:
+          PROJECT: ${{ matrix.project }}
+        run: bash utilities/build-debian-ci.sh "$PROJECT" "$GITHUB_WORKSPACE/debian-artifacts/$PROJECT"
+
+      - name: Check source and binary packages with Lintian
+        env:
+          PROJECT: ${{ matrix.project }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "debian-artifacts/$PROJECT"
+          lintian --allow-root --profile debian --fail-on error \
+            --display-info --no-override ./*.dsc ./*.changes 2>&1 | tee lintian.log
+
+      - name: Save packages, source, checksums and diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: debian13-${{ matrix.project }}-${{ github.sha }}
+          path: debian-artifacts/${{ matrix.project }}/
+          if-no-files-found: error
+          retention-days: 30
