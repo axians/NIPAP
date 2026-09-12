@@ -2287,6 +2287,20 @@ class Nipap:
 
             # val1 is key, val2 is value.
 
+            if isinstance(query['val1'], str) and query['val1'].startswith('avp.'):
+                key = query['val1'][4:]
+                avp_column = (table_name or 'inp') + '.avps'
+                if query['operator'] == 'avp_exists':
+                    if not key or query['val2'] is not True:
+                        raise NipapInputError('AVP key searches require a non-empty key and val2=True')
+                    return ' (' + avp_column + ' ? %s) ', [key]
+                if not key or not isinstance(query['val2'], str):
+                    raise NipapInputError('AVP searches require a non-empty key and a string value')
+                if query['operator'] not in ('=', 'equals', '!=', 'not_equals'):
+                    raise NipapNoSuchOperatorError('AVP searches support only = and !=')
+                where = ' (' + avp_column + ' -> %s) ' + _operation_map[query['operator']] + ' %s '
+                return where, [key, query['val2']]
+
             if query['val1'] not in _prefix_spec:
                 raise NipapInputError("Search variable '{}' unknown".format(query['val1']))
 
