@@ -199,6 +199,12 @@ xmlrpc_uri = http://{{NIPAPD_USERNAME}}:{{NIPAPD_PASSWORD}}@{{NIPAPD_HOST}}:{{NI
 #example using local authentication with username 'user' and password 'pass'
 #xmlrpc_uri = http://user@local:pass@127.0.0.1:1337
 
+# Audit log access: comma-separated authenticated username@backend identities.
+# Empty by default; ordinary web users cannot view the audit log.
+#audit_admins = admin@local
+# PostgreSQL connection string for an account with SELECT on ip_net_log only.
+#audit_db_dsn = host=localhost dbname=nipap user=nipap_audit password=CHANGE_ME sslmode=require
+
 # Secret used to sign cookies etc
 secret_key = {{WWW_SECRET_KEY}}
 

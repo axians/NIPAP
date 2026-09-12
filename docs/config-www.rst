@@ -77,3 +77,9 @@ Now, restart Apache httpd and the NIPAP web UI should be up and running!
 
 That wraps up this getting started guide, for more information see the manual
 pages.
+
+Audit log
+---------
+The administrator-only audit viewer is disabled by default. See
+`Web audit log <audit-log.rst>`_ for the account allowlist and read-only database
+connection setup.

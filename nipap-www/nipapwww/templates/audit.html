@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block head %}
+<style>
+    .audit-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; justify-content: center; margin: 0 auto; }
+    .audit-filters label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 0; font-weight: normal; }
+    .audit-filters input[name="vrf_id"] { width: 80px; }
+    .audit-filters input[name="prefix_id"] { width: 90px; }
+    .audit-filters input[name="username"] { width: 140px; }
+    .audit-filters input[name="prefix"] { width: 180px; }
+    .audit-date-control { display: flex; gap: 4px; }
+    .audit-date-control input { width: 110px; }
+    .audit-table { width: 100%; border-collapse: collapse; }
+    .audit-table th, .audit-table td { text-align: left; vertical-align: top; }
+    .audit-table td { border-bottom: 1px solid #eee; }
+    .audit-heading { font-size: 20px; font-weight: normal; margin: 20px 0 8px; }
+    .audit-table td { overflow-wrap: anywhere; }
+    .audit-table small { display: block; margin-top: 4px; }
+    .audit-description { white-space: pre-wrap; min-width: 200px; }
+    .audit-error { color: #a00; }
+    [data-theme="dark"] .audit-table tbody tr:hover { background: var(--theme-hover); }
+    [data-theme="dark"] .audit-table th, [data-theme="dark"] .audit-table td { border-color: var(--theme-border); }
+    [data-theme="dark"] .audit-error { color: #ff9c9c; }
+</style>
+<script>
+    $(function () {
+        $('.audit-date-control input').datepicker({
+            dateFormat: 'yy-mm-dd',
+            firstDay: 1,
+            changeMonth: true,
+            changeYear: true,
+            showOn: 'focus'
+        });
+    });
+</script>
+{% endblock %}
+{% block menu %}
+<div id="search_box" ng-non-bindable>
+    <form method="get" class="audit-filters">
+        <label title="Exact usernames separated by commas. Leave empty for all users.">Users<input class="form-control input-sm" name="username" value="{{ filters.username }}" maxlength="4096" placeholder="admin, markus" title="Exact usernames separated by commas. Leave empty for all users."></label>
+        <label title="VRF IDs separated by commas. Leave empty for all VRFs.">VRF IDs<input class="form-control input-sm" name="vrf_id" type="text" maxlength="4096" value="{{ filters.vrf_id }}" placeholder="0, 2, 5" title="VRF IDs separated by commas. Leave empty for all VRFs."></label>
+        <label title="Find entries whose IPv4 or IPv6 prefix overlaps the entered prefix. Leave empty for all prefixes.">Prefix<input class="form-control input-sm" name="prefix" title="Find entries whose IPv4 or IPv6 prefix overlaps the entered prefix. Leave empty for all prefixes." value="{{ filters.prefix }}" placeholder="192.0.2.0/24 or 2001:db8::/32"></label>
+        <label title="Match one exact prefix ID, including history for deleted prefixes. Leave empty for all prefix IDs.">Prefix ID<input class="form-control input-sm" name="prefix_id" title="Match one exact prefix ID, including history for deleted prefixes. Leave empty for all prefix IDs." type="text" inputmode="numeric" pattern="[0-9]+" maxlength="10" value="{{ filters.prefix_id }}"></label>
+        <label title="Include entries from this date onward, in UTC. Use YYYY-MM-DD or select a date from the calendar.">From<span class="audit-date-control"><input class="form-control input-sm" name="from" title="Include entries from this date onward, in UTC. Use YYYY-MM-DD or select a date from the calendar." type="text" placeholder="YYYY-MM-DD" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" maxlength="10" value="{{ filters['from'] }}" autocomplete="off"></span></label>
+        <label title="Include entries through the end of this date, in UTC. Use YYYY-MM-DD or select a date from the calendar.">To<span class="audit-date-control"><input class="form-control input-sm" name="to" title="Include entries through the end of this date, in UTC. Use YYYY-MM-DD or select a date from the calendar." type="text" placeholder="YYYY-MM-DD" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" maxlength="10" value="{{ filters.to }}" autocomplete="off"></span></label>
+        <label title="Maximum rows displayed per page. Click Filter to apply.">Rows per page
+            <select class="form-control input-sm" name="page_size">
+                {% for size in page_sizes %}<option value="{{ size }}" {% if (filters.page_size or '50')|int == size %}selected{% endif %}>{{ size }}</option>{% endfor %}
+            </select>
+        </label>
+        <button type="submit" class="btn btn-primary btn-sm"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> Filter</button>
+        <a class="btn btn-default btn-sm" href="{{ url_for('audit.index') }}">Reset</a>
+    </form>
+</div>
+{% endblock %}
+{% block content %}
+<div ng-non-bindable>
+    <h1 class="audit-heading">Audit log</h1>
+    <p class="text-muted">IPAM changes, newest first. Dates and times are UTC. Historical values remain available after an object is deleted.</p>
+
+    {% if total_entries is defined %}
+    <p class="text-muted">Showing {{ entries|length }} entries · {{ total_entries }} matching entries · {{ total_pages }} pages at {{ page_size }} per page.
+        {% if filters.before %}<a href="{{ first_url }}">Newest entries</a>{% endif %}
+    </p>
+    {% endif %}
+    {% if error %}<p role="alert" class="audit-error">{{ error }}</p>{% endif %}
+    <div style="overflow-x: auto;">
+        <table class="audit-table listing">
+            <thead><tr><th scope="col">Time (UTC)</th><th scope="col">User / source</th><th scope="col">Object</th><th scope="col">Change</th></tr></thead>
+            <tbody class="listing">
+            {% for entry in entries %}
+                <tr>
+                    <td><time datetime="{{ entry.timestamp }}">{{ entry.timestamp[:10] }}<small>{{ entry.timestamp[11:19] }} UTC</small></time><small>#{{ entry.id }}</small></td>
+                    <td>{{ entry.username }}{% if entry.full_name %}<small>{{ entry.full_name }}</small>{% endif %}<small>Authenticated as: {{ entry.authenticated_as }}</small><small>Source: {{ entry.authoritative_source }}</small></td>
+                    <td>
+                        {% if entry.prefix_id is not none %}<a href="{{ url_for('audit.open_prefix', prefix_id=entry.prefix_id) }}">{{ entry.prefix or 'Prefix' }} (ID {{ entry.prefix_id }})</a>{% endif %}
+                        {% if entry.vrf_id is not none %}<small><a href="{{ url_for('audit.open_vrf', vrf_id=entry.vrf_id) }}">VRF {{ entry.vrf_id }}: {{ entry.vrf_name or '' }}{% if entry.vrf_rt %} ({{ entry.vrf_rt }}){% endif %}</a></small>{% endif %}
+                        {% if entry.pool_id is not none %}<small>Pool {{ entry.pool_id }}: {{ entry.pool_name or '' }}</small>{% endif %}
+                    </td>
+                    <td class="audit-description">{{ entry.description }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="4">No matching audit entries.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if next_url %}<p><a class="btn btn-default btn-sm" href="{{ next_url }}">Older entries →</a></p>{% endif %}
+</div>
+{% endblock %}

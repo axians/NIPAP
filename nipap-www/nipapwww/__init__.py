@@ -67,7 +67,8 @@ def create_app(test_config=None):
             pass
 
     # Set up blueprints
-    from . import auth, ng, prefix, static, version, xhr
+    from . import audit, auth, ng, prefix, static, version, xhr
+    app.register_blueprint(audit.bp)
     app.register_blueprint(auth.bp)
     app.register_blueprint(ng.bp)
     app.register_blueprint(prefix.bp)

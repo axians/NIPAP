@@ -67,6 +67,8 @@ def login():
     path_before_login = session.get('path_before_login')
     session.clear()
     session['user'] = auth.username
+    session['authenticated_identity'] = '{}@{}'.format(
+        auth.authenticated_as, auth.auth_backend)
     session['full_name'] = auth.full_name
     session['readonly'] = auth.readonly
     session['current_vrfs'] = {}

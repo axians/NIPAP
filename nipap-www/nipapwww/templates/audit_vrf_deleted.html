@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>VRF no longer exists</h1>
+<p>VRF {{ vrf_id }} has been deleted. Its audit history is still available.</p>
+<p><a href="{{ url_for('audit.index', vrf_id=vrf_id) }}">View this VRF’s audit history</a></p>
+{% endblock %}

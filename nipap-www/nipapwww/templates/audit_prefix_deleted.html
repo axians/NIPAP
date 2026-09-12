@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Prefix no longer exists</h1>
+<p>Prefix ID {{ prefix_id }} has been deleted. Its audit history is still available.</p>
+<p><a href="{{ url_for('audit.index', prefix_id=prefix_id) }}">View this prefix’s audit history</a></p>
+{% endblock %}
