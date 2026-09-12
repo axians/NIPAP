@@ -16,11 +16,11 @@ keywords = ["nipap"]
 dependencies = [
   "zipp==3.21.0",
   "importlib_metadata==8.5.0",
-  "Flask==3.0.3",
+  "Flask==3.1.3",
   "Flask-Compress==1.17",
   "flask-xml-rpc-re==0.1.4",
   "flask-restx==1.3.0",
-  "requests==2.32.4",
+  "requests==2.33.0",
   "IPy==1.01",
   "Jinja2==3.1.6",
   "MarkupSafe==3.0.2",
@@ -33,9 +33,9 @@ dependencies = [
   "pyparsing==3.2.1",
   "python-dateutil==2.8.2",
   "pytz==2024.2",
-  "pyjwt==2.10.1",
+  "pyjwt==2.13.0",
   "kafka-python-ng==2.2.3",
-  "tornado==6.5.5",
+  "tornado==6.5.7",
 #  "docutils==0.21.2"
 ]
 
