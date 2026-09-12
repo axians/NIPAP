@@ -93,6 +93,11 @@
 					<li style="display: inline-block;">
 					<a href="/ng/pool#/pool/list" class="menu_link {% if page == 'pools' -%}menu_link_active{%- endif -%}">pools</a>
 					</li>
+					{% if g.audit_admin %}
+					<li style="display: inline-block;">
+					<a href="{{ url_for('audit.index') }}" class="menu_link {% if page == 'audit' %}menu_link_active{% endif %}">audit log</a>
+					</li>
+					{% endif %}
 				</ol>
 			</div>
 			<div class="menu_entry" style="position: absolute; right: 30px; padding-top: 0px;">
