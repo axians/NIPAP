@@ -1,5 +1,84 @@
 Getting started for sysadmins
 -----------------------------
+Debian 13 (trixie)
+=================
+
+For a local database, install PostgreSQL and its matching ip4r extension::
+
+    sudo apt install postgresql postgresql-17-ip4r
+
+Build the backend packages from this checkout using Debian's build tools::
+
+    sudo apt install build-essential debhelper dh-python python3-all python3-setuptools python3-docutils pybuild-plugin-pyproject
+    cd nipap
+    dpkg-buildpackage -b -us -uc
+
+The backend requires ``python3-flask-restx`` and ``python3-flask-xml-rpc-re``,
+which are available from NIPAP's testing repository rather than Debian 13's
+own repositories. Configure that repository using a dedicated signing key::
+
+    sudo apt install ca-certificates curl
+    curl -fsSLo /tmp/nipap.asc https://spritelink.github.io/NIPAP/nipap.gpg.key
+    sudo install -m 0644 /tmp/nipap.asc /usr/share/keyrings/nipap.asc
+    echo 'deb [signed-by=/usr/share/keyrings/nipap.asc] https://spritelink.github.io/NIPAP/repos/apt testing main extra' | sudo tee /etc/apt/sources.list.d/nipap.list
+    sudo apt update
+    sudo apt install ../nipap-common_*.deb ../nipapd_*.deb
+
+Select local database configuration and automatic startup during installation.
+Automatic schema upgrades remain an explicit administrator choice. The custom
+systemd changes described below are in the packages built from this checkout;
+they are not implied to exist in the published repository packages.
+
+The package supplies ``nipapd.service``. It starts the daemon as ``nipap:nipap``
+with ``SupplementaryGroups=ssl-cert``, runs in the foreground without a PID
+file, and logs to the journal. Matching ``user = nipap`` and ``group = nipap``
+settings in ``nipap.conf`` are accepted without clearing those groups.
+
+``/etc/default/nipapd`` controls ``AUTO_INSTALL`` and ``AUTO_UPGRADE``.
+New installations use systemd to enable or disable startup. An existing
+``RUN=no`` from an older package is still honored; remove that legacy setting
+or set it to ``yes`` before enabling the service. Upgrades preserve existing
+settings; ``dpkg-reconfigure nipapd`` reapplies the debconf choices.
+Use systemctl to manage the service::
+
+    sudo systemctl enable --now nipapd
+    sudo systemctl status nipapd
+    sudo journalctl -u nipapd -b
+
+TLS certificate access
+~~~~~~~~~~~~~~~~~~~~~~
+
+Install the certificate chain at ``/etc/ssl/certs/nipap.crt`` and its private
+key at ``/etc/ssl/private/nipap.key``. Give the key group read access::
+
+    sudo chown root:ssl-cert /etc/ssl/private/nipap.key
+    sudo chmod 0640 /etc/ssl/private/nipap.key
+
+Every parent directory, including symlink targets, must permit traversal by
+the service. Group membership alone does not grant access to root-only files.
+Configure the existing ``[nipapd]`` section in ``/etc/nipap/nipap.conf``::
+
+    ssl_port = 1338
+    ssl_cert_file = /etc/ssl/certs/nipap.crt
+    ssl_key_file = /etc/ssl/private/nipap.key
+    syslog = false
+
+Keep ``listen = 127.0.0.1`` for local access, or explicitly choose the server's
+listening addresses. Set ``port =`` (empty) to disable plaintext HTTP.
+Restart the service after installing or renewing a certificate::
+
+    sudo systemctl restart nipapd
+
+There is no certificate reload via SIGHUP. The service deliberately has no
+``ExecReload`` action. An unreadable key or invalid certificate is reported in
+the journal before database setup or worker creation.
+
+Older releases
+==============
+
+The following instructions describe the historical packages and installation
+flow. Use the Debian 13 instructions above for trixie.
+
 This guide will walk you through the setup process to get NIPAP up and running
 on a Debian 7.0 (wheezy) or Ubuntu 12.04 or later system. With no prior
 experience it should take about 15 minutes.

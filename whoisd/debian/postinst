@@ -11,12 +11,14 @@ case "$1" in
 		db_get nipap-whoisd/startup
 		if [ "$RET" = "true" ]; then
 			sed -i -e 's/RUN=.*/RUN=yes/' /etc/default/nipap-whoisd
-			update-rc.d nipap-whoisd defaults >/dev/null 2>&1
+			deb-systemd-helper enable nipap-whoisd.service >/dev/null
 		else
 			sed -i -e 's/RUN=.*/RUN=no/' /etc/default/nipap-whoisd
-			update-rc.d nipap-whoisd remove >/dev/null 2>&1
+			deb-systemd-helper disable nipap-whoisd.service >/dev/null
 		fi
 	;;
 esac
+
+#DEBHELPER#
 
 exit 0

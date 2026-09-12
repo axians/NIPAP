@@ -1,0 +1,25 @@
+#!/bin/sh
+# Keep the existing Debian configuration flags when starting under systemd.
+set -eu
+RUN=yes
+AUTO_INSTALL=no
+AUTO_UPGRADE=no
+if [ -r /etc/default/nipapd ]; then
+    # shellcheck source=/dev/null
+    . /etc/default/nipapd
+fi
+if [ "${1:-}" = --check ]; then
+    if [ "$RUN" != yes ]; then
+        echo 'nipapd disabled; set RUN=yes in /etc/default/nipapd'
+        exit 1
+    fi
+    exit 0
+fi
+set -- --foreground --no-pid-file --config /etc/nipap/nipap.conf
+if [ "$AUTO_INSTALL" = yes ]; then
+    set -- "$@" --auto-install-db
+fi
+if [ "$AUTO_UPGRADE" = yes ]; then
+    set -- "$@" --auto-upgrade-db
+fi
+exec /usr/bin/nipapd "$@"

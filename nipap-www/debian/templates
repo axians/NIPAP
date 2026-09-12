@@ -1,7 +1,7 @@
 Template: nipap-www/autouser
 Type: boolean
 Default: false
-Description: Automatically create user for web interface?
+_Description: Automatically create user for web interface?
  The NIPAP backend daemon, nipapd, appears to be installed on this system.
  Would you like to add a user to the local auth database of nipapd for the web
  interface? The configuration file for the web interface will be updated with
@@ -14,13 +14,13 @@ Description: Automatically create user for web interface?
 Template: nipap-www/auto_secret_key
 Type: boolean
 Default: false
-Description: Automatically configure randomized secret_key?
+_Description: Automatically configure randomized secret_key?
  The NIPAP web UI requires a secret key to be configured in the www-section
  of nipap.conf.
 
 Template: nipap-www/python3-warning
 Type: note
-Description: The NIPAP web UI is now migrated to Python 3.
+_Description: The NIPAP web UI is now migrated to Python 3.
  Depending on how it is served, some further action might be needed for it to
  function after the upgrade. If it is served with Apache httpd and mod_wsgi as
  described in the installation guide, the Python 3 version of mod_wsgi needs to

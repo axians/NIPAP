@@ -13,7 +13,7 @@ except ImportError:
 
 import csv
 import os
-import pipes
+import shlex
 import re
 import shlex
 import string
@@ -2055,7 +2055,7 @@ def complete_node(arg):
     except configparser.NoOptionError:
         return [ '', ]
 
-    cmd = re.sub('%search_string%', pipes.quote(arg), cmd)
+    cmd = re.sub('%search_string%', shlex.quote(arg), cmd)
 
     args = shlex.split(cmd)
     p = subprocess.Popen(args, stdout=subprocess.PIPE)

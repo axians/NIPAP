@@ -57,55 +57,57 @@ case "$1" in
 
 		# create group / user for nipapd
 		if [ -z "`getent passwd nipap`" ]; then
-			adduser --quiet --system --group --no-create-home nipap
+			adduser --quiet --system --group --home /nonexistent --no-create-home nipap
 		fi
 
-		# autostart
-		db_get nipapd/startup
-		if [ "$RET" = "true" ]; then
-			sed -i -e 's/RUN=.*/RUN=yes/' /etc/default/nipapd
-			update-rc.d nipapd defaults >/dev/null 2>&1
-		else
-			sed -i -e 's/RUN=.*/RUN=no/' /etc/default/nipapd
-			update-rc.d nipapd remove >/dev/null 2>&1
+		# Preserve /etc/default settings on upgrades. Reconfigure applies debconf.
+		if [ -z "${2:-}" ] || [ "${DEBCONF_RECONFIGURE:-}" = 1 ]; then
+			# autostart
+			db_get nipapd/startup
+			if [ "$RET" = "true" ]; then
+				sed -i -e 's/RUN=.*/RUN=yes/' /etc/default/nipapd
+				deb-systemd-helper enable nipapd.service >/dev/null
+			else
+				sed -i -e 's/RUN=.*/RUN=no/' /etc/default/nipapd
+				deb-systemd-helper disable nipapd.service >/dev/null
+			fi
+
+			# local or remote db?
+			if [ "$DB_HOST" = "localhost" ]; then
+				# automatically do install?
+				db_get nipapd/local_db_autoconf
+				if [ "$RET" = "true" ]; then
+					sed -i -e 's/AUTO_INSTALL=.*/AUTO_INSTALL=yes/' /etc/default/nipapd
+				else
+					sed -i -e 's/AUTO_INSTALL=.*/AUTO_INSTALL=no/' /etc/default/nipapd
+				fi
+
+				# automatically do upgrades?
+				db_get nipapd/local_db_upgrade
+				if [ "$RET" = "true" ]; then
+					sed -i -e 's/AUTO_UPGRADE=.*/AUTO_UPGRADE=yes/' /etc/default/nipapd
+				else
+					sed -i -e 's/AUTO_UPGRADE=.*/AUTO_UPGRADE=no/' /etc/default/nipapd
+				fi
+
+			else
+				# automatically do install?
+				db_get nipapd/remote_db_install
+				if [ "$RET" = "true" ]; then
+					sed -i -e 's/AUTO_INSTALL=.*/AUTO_INSTALL=yes/' /etc/default/nipapd
+				else
+					sed -i -e 's/AUTO_INSTALL=.*/AUTO_INSTALL=no/' /etc/default/nipapd
+				fi
+
+				# automatically do upgrade?
+				db_get nipapd/remote_db_upgrade
+				if [ "$RET" = "true" ]; then
+					sed -i -e 's/AUTO_UPGRADE=.*/AUTO_UPGRADE=yes/' /etc/default/nipapd
+				else
+					sed -i -e 's/AUTO_UPGRADE=.*/AUTO_UPGRADE=no/' /etc/default/nipapd
+				fi
+			fi
 		fi
-
-		# local or remote db?
-		if [ "$DB_HOST" = "localhost" ]; then
-			# automatically do install?
-			db_get nipapd/local_db_autoconf
-			if [ "$RET" = "true" ]; then
-				sed -i -e 's/AUTO_INSTALL=.*/AUTO_INSTALL=yes/' /etc/default/nipapd
-			else
-				sed -i -e 's/AUTO_INSTALL=.*/AUTO_INSTALL=no/' /etc/default/nipapd
-			fi
-
-			# automatically do upgrades?
-			db_get nipapd/local_db_upgrade
-			if [ "$RET" = "true" ]; then
-				sed -i -e 's/AUTO_UPGRADE=.*/AUTO_UPGRADE=yes/' /etc/default/nipapd
-			else
-				sed -i -e 's/AUTO_UPGRADE=.*/AUTO_UPGRADE=no/' /etc/default/nipapd
-			fi
-
-		else
-			# automatically do install?
-			db_get nipapd/remote_db_install
-			if [ "$RET" = "true" ]; then
-				sed -i -e 's/AUTO_INSTALL=.*/AUTO_INSTALL=yes/' /etc/default/nipapd
-			else
-				sed -i -e 's/AUTO_INSTALL=.*/AUTO_INSTALL=no/' /etc/default/nipapd
-			fi
-
-			# automatically do upgrade?
-			db_get nipapd/remote_db_upgrade
-			if [ "$RET" = "true" ]; then
-				sed -i -e 's/AUTO_UPGRADE=.*/AUTO_UPGRADE=yes/' /etc/default/nipapd
-			else
-				sed -i -e 's/AUTO_UPGRADE=.*/AUTO_UPGRADE=no/' /etc/default/nipapd
-			fi
-		fi
-
 
 		# if database isn't running
 		if [ $POSTGRES_RUNNING -eq 0 ]; then
@@ -147,12 +149,14 @@ case "$1" in
 
 		db_stop
 
-		if [ -d /run/systemd/system ]; then
-			systemctl daemon-reload
-		fi
-		# finally start nipapd
-		invoke-rc.d nipapd start
 		;;
 esac
+
+#DEBHELPER#
+
+# The native unit handles systemd hosts; retain startup on SysV installations.
+if [ "$1" = configure ] && [ ! -d /run/systemd/system ]; then
+	invoke-rc.d nipapd start
+fi
 
 exit 0

@@ -1,5 +1,5 @@
 # defaults file for nipapd
 
-RUN=no
+# Enable or disable startup with systemctl enable/disable nipapd.
 AUTO_INSTALL=no
 AUTO_UPGRADE=no

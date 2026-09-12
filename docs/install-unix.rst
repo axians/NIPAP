@@ -87,25 +87,33 @@ start nipapd by executing::
 
     /etc/init.d/nipapd start
     
-Example of systemd (CentOS 7+):
+On Debian 13, use the packaged systemd unit described in
+`install-debian <install-debian.rst>`_. For a manual installation with a
+systemd service manager, a minimal unit is shown below. Create the ``nipap``
+user and group first and adjust the executable path to the installation::
 
     [root@nipap ~]# cat /usr/lib/systemd/system/nipapd.service
     [Unit]
     Description=nipapd daemon
-    Documentation=man:nipapd(5)
+    Documentation=man:nipapd(8)
     After=network.target
     [Service]
-    Type=forking
-    ExecStart=/usr/sbin/nipapd
-    PIDFile=/var/run/nipap/nipapd.pid
-    ExecStopPost=/usr/bin/echo $MAINPID
-    KillMode=process
+    Type=simple
+    User=nipap
+    Group=nipap
+    UMask=0077
+    ExecStart=/usr/local/bin/nipapd --foreground --no-pid-file
+    KillMode=control-group
     Restart=on-failure
-    RestartSec=42s
+    RestartSec=10s
     [Install]
     WantedBy=multi-user.target
 
-Start:
+Grant the service read access to its configuration and TLS key. On Debian,
+the packaged unit uses ``SupplementaryGroups=ssl-cert`` for group-readable
+keys. Set ``syslog = false`` in ``nipap.conf`` to log only to the journal.
+
+Start::
 
     systemctl start nipapd
     

@@ -5,7 +5,9 @@ Maintainer: Lukas Garberg <lukas@spritelink.net>
 Build-Depends: debhelper-compat (= 13),
                python3-all,
                python3-setuptools,
-               dh-python
+               dh-python,
+               pybuild-plugin-pyproject,
+               po-debconf
 Standards-Version: 4.6.1
 
 Package: nipap-www
