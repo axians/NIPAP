@@ -262,7 +262,7 @@ def run():
         except IOError:
             logger.error('NIPAPd already running (pid: ' + lf.read().strip() + ')')
             sys.exit(1)
-        # Daemonization resets the umask; allow PID reads but only owner writes.
+        # Daemonization resets umask; restrict PID file writes to its owner.
         os.fchmod(lf.fileno(), 0o644)
         logger.debug('Writing PID to file: ' + cfg.get('nipapd', 'pid_file'))
         lf.truncate(0)
