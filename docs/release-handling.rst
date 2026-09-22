@@ -2,6 +2,41 @@ NIPAP release handling
 ======================
 This document tries to describe most aspects of the release handling of NIPAP.
 
+Axians Debian 13 releases
+------------------------
+
+The Axians release workflow is ``.github/workflows/debian-packages.yml``.
+It builds the five source projects in clean Debian 13 chroots, checks packages
+with Lintian, and tests installation of the five core binary packages against
+PostgreSQL 17. Tagged releases are published only after both jobs succeed.
+
+Prepare a release branch from current Axians master. Update the application
+versions in all five projects, Debian changelogs, NEWS, and
+``docs/releases/<version>.md``. Keep the SQL, backend and Debian configuration
+schema versions aligned. Validate before tagging::
+
+    python3 utilities/check-release.py v0.32.7+axians.1
+
+Push the release branch and let its Debian package workflow finish. Once the
+release commit is ready, create and push its matching tag::
+
+    git tag -a v0.32.7+axians.1 -m 'NIPAP 0.32.7+axians.1 for Debian 13'
+    git push origin refs/tags/v0.32.7+axians.1
+
+The tag workflow rebuilds and tests that exact commit, uploads packages into a
+draft GitHub Release, then publishes it. Only the release job receives
+``contents: write``. Publication is restricted to ``axians/NIPAP``. If an upload
+fails after draft creation, inspect the draft before retrying; the workflow
+does not overwrite existing releases or move tags.
+
+The release includes core and optional whois packages, checksums, installation
+instructions, the source commit ID, and an archive of source/build/test records.
+See ``docs/releases/INSTALL-debian13.md`` for the migration installation flow.
+Existing production database migration, host reboot and deployment TLS checks
+remain required before cutover.
+
+The remaining sections describe the historical upstream release process.
+
 Packaging
 ---------
 NIPAP is packaged into a number of packages. There is the backend parts in form
@@ -214,4 +249,3 @@ increment the -x number.
 When dch launches an editor for editing the changelog. Copy the content of the
 NEWS file into the Debian changelog (see previous chapten "NEWS / Changelog"
 for more information). Make sure the formatting aligns and save the file.
-

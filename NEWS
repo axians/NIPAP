@@ -1,3 +1,10 @@
+Version 0.32.7+axians.1
+-------------------------
+ * Debian 13 packages with native systemd service and TLS startup checks.
+ * Light/dark web themes and an administrator-only audit log viewer.
+ * Tagged releases with package installation tests and downloadable artifacts.
+ * Includes the current Axians dependency updates and database schema 8.
+
 Version 0.32.7 - Poseidon
 -------------------------
  * Modernized packaging (#1419, #1420, #1425, #1426, #1427)

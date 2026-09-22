@@ -3,7 +3,7 @@ name: Debian 13 packages
 on:
   pull_request:
   push:
-    branches: [master, 'deb13-*']
+    branches: [master, 'deb13-*', 'release/*']
     tags: ['v*']
   workflow_dispatch:
 
@@ -41,6 +41,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Validate release metadata
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python3 utilities/check-release.py "$RELEASE_TAG"
+
       - name: Build source package and binaries in a clean Debian chroot
         env:
           PROJECT: ${{ matrix.project }}
@@ -64,3 +70,72 @@ jobs:
           path: debian-artifacts/${{ matrix.project }}/
           if-no-files-found: error
           retention-days: 30
+
+  test:
+    name: Install and test Debian 13 packages
+    needs: build
+    runs-on: ubuntu-24.04
+    container: debian:trixie
+    timeout-minutes: 20
+    steps:
+      - name: Install download tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: debian13-*-${{ github.sha }}
+          path: debian-artifacts
+      - name: Test installed packages against PostgreSQL 17
+        run: bash utilities/test-debian-release.sh "$GITHUB_WORKSPACE/debian-artifacts" "$GITHUB_WORKSPACE/release-test-logs"
+      - name: Save installation and test logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: debian13-tests-${{ github.sha }}
+          path: release-test-logs/
+          if-no-files-found: error
+
+  release:
+    name: Publish Axians release
+    if: github.repository == 'axians/NIPAP' && startsWith(github.ref, 'refs/tags/v')
+    needs: [build, test]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: debian13-*-${{ github.sha }}
+          path: debian-artifacts
+      - name: Assemble release assets
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          python3 utilities/check-release.py "$RELEASE_TAG"
+          mkdir release-assets
+          find debian-artifacts -name '*.deb' -exec cp -t release-assets {} +
+          cp docs/releases/INSTALL-debian13.md release-assets/
+          printf '%s\n' "$GITHUB_SHA" > release-assets/SOURCE_COMMIT
+          tar -czf release-assets/source-and-build-records.tar.gz -C debian-artifacts .
+          cd release-assets
+          sha256sum ./* > SHA256SUMS
+      - name: Publish packages after all checks pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          # Upload into a draft first so a partial upload is never published.
+          gh release create "$RELEASE_TAG" release-assets/* --verify-tag --draft \
+            --title "NIPAP ${RELEASE_TAG#v} for Debian 13" \
+            --notes-file "docs/releases/${RELEASE_TAG#v}.md"
+          gh release edit "$RELEASE_TAG" --draft=false --latest
