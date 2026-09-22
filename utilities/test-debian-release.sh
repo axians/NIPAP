@@ -89,7 +89,7 @@ mkdir "$work/nipap-cli"
 ln -s /usr/bin/nipap "$work/nipap-cli/nipap"
 cd "$work"
 unset PYTHONPATH
-for suite in test_nipapd_startup test_web_audit test_xmlrpc nipaptest test_cli test_nipap_ro test_rest; do
+for suite in test_pynipap_connections test_nipapd_startup test_web_audit test_xmlrpc nipaptest test_cli test_nipap_ro test_rest; do
     python3 -m unittest discover -s tests -p "$suite.py"
 done
 python3 - <<'PY'

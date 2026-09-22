@@ -181,6 +181,7 @@ jobs:
       env:
         REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
       run: |
+        PYTHONPATH=pynipap python3 -m unittest discover -s tests -p test_pynipap_connections.py
         PYTHONPATH=nipap-www python3 -m unittest discover -s tests -p test_web_audit.py
         nosetests3 tests/test_xmlrpc.py
         nosetests3 tests/nipaptest.py
