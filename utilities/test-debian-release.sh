@@ -60,8 +60,8 @@ nipap-passwd add -u readonly -p gottatest --readonly -n 'Read-only release tests
 # Install order can leave web debconf setup pending until the backend exists.
 dpkg-reconfigure -f noninteractive nipap-www
 sed -e 's/username = guest/username = unittest/' -e 's/password = guest/password = gottatest/' \
-    /etc/.nipaprc > /root/.nipaprc
-chmod 0600 /root/.nipaprc
+    /etc/.nipaprc > "$HOME/.nipaprc"
+chmod 0600 "$HOME/.nipaprc"
 
 runuser -u nipap -- /usr/bin/nipapd --foreground --no-pid-file --auto-install-db > "$logs/nipapd.log" 2>&1 &
 daemon_pid=$!
