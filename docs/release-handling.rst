@@ -15,13 +15,13 @@ versions in all five projects, Debian changelogs, NEWS, and
 ``docs/releases/<version>.md``. Keep the SQL, backend and Debian configuration
 schema versions aligned. Validate before tagging::
 
-    python3 utilities/check-release.py v0.32.7+axians.1
+    python3 utilities/check-release.py v0.32.7+axians.2
 
 Push the release branch and let its Debian package workflow finish. Once the
 release commit is ready, create and push its matching tag::
 
-    git tag -a v0.32.7+axians.1 -m 'NIPAP 0.32.7+axians.1 for Debian 13'
-    git push origin refs/tags/v0.32.7+axians.1
+    git tag -a v0.32.7+axians.2 -m 'NIPAP 0.32.7+axians.2 for Debian 13'
+    git push origin refs/tags/v0.32.7+axians.2
 
 The tag workflow rebuilds and tests that exact commit, uploads packages into a
 draft GitHub Release, then publishes it. Only the release job receives

@@ -1,4 +1,4 @@
-nipap-www (0.32.7+axians.1-1) trixie; urgency=medium
+nipap-www (0.32.7+axians.2-1) trixie; urgency=medium
 
   * Build the Axians release for Debian 13.
   * Include light/dark themes and the administrator-only audit viewer.

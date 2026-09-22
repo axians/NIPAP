@@ -1,4 +1,4 @@
-pynipap (0.32.7+axians.1-1) trixie; urgency=medium
+pynipap (0.32.7+axians.2-1) trixie; urgency=medium
 
   * Build the Axians release for Debian 13.
 

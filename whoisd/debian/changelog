@@ -1,4 +1,4 @@
-nipap-whoisd (0.32.7+axians.1-1) trixie; urgency=medium
+nipap-whoisd (0.32.7+axians.2-1) trixie; urgency=medium
 
   * Build the optional whois daemon for the Axians Debian 13 release.
 

@@ -1,4 +1,4 @@
-nipap (0.32.7+axians.1-1) trixie; urgency=medium
+nipap (0.32.7+axians.2-1) trixie; urgency=medium
 
   * Build the Axians release for Debian 13.
   * Include native systemd service, TLS startup validation and schema 8.
