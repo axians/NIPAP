@@ -24,18 +24,27 @@ Restart the web application after changing the allowlist. Both ``/audit/`` and
 The web application connects directly to PostgreSQL for this read-only feature.
 It can connect to a remote database; configure network access and TLS accordingly.
 Create a dedicated database role using an administrator connection to the NIPAP
-database, and set its password with psql's ``\password nipap_audit`` command::
+database::
 
     CREATE ROLE nipap_audit LOGIN;
     GRANT CONNECT ON DATABASE nipap TO nipap_audit;
     GRANT USAGE ON SCHEMA public TO nipap_audit;
     GRANT SELECT ON public.ip_net_log TO nipap_audit;
 
+Then run the following command separately at the psql prompt, enter the password
+twice, and wait for the prompt to return before entering any more commands::
+
+    \password nipap_audit
+
+Use that password in ``audit_db_dsn``. ``CREATE ROLE`` does not generate one.
+For Apache/mod_wsgi, configure ``WSGIApplicationGroup %{GLOBAL}`` as described
+in ``config-www.rst`` so psycopg2 loads in the main Python interpreter.
+
 Store the connection string in the protected web configuration. The role needs
 no access to other tables or sequences and no write permissions. Queries also
 run in a read-only transaction with a five-second statement timeout.
 
-Open **audit log** in the navigation bar. Filter by exact usernames, VRF ID,
+Open **audit** in the navigation bar. Filter by exact usernames, VRF ID,
 overlapping IPv4/IPv6 prefix, prefix ID or inclusive UTC date range. Results show
 25, 50, 100 or 200 entries per page (50 by default), with matching entry and
 page totals. Entries are ordered by decreasing audit ID; **Older entries** continues

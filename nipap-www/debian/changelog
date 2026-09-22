@@ -1,3 +1,11 @@
+nipap-www (0.32.7+axians.4-1) trixie; urgency=medium
+
+  * Release the Axians 4 package set for Debian 13.
+  * Fix dark-mode message, action button and dropdown contrast.
+  * Label the theme switch and link the existing favicon.
+
+ -- soundgoof <soundgoof@gmail.com>  Tue, 22 Sep 2026 14:23:27 +0200
+
 nipap-www (0.32.7+axians.3-1) trixie; urgency=medium
 
   * Release the Axians 3 package set for Debian 13.

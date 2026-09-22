@@ -17,8 +17,12 @@ mkdir -p "$logs"
 exec > >(tee "$logs/install-and-test.log") 2>&1
 export DEBIAN_FRONTEND=noninteractive
 daemon_pid=
+apache_started=false
 cleanup() {
     result=$?
+    if [ "$apache_started" = true ]; then
+        apache2ctl stop || true
+    fi
     if [ -n "$daemon_pid" ]; then
         kill "$daemon_pid" 2>/dev/null || true
         wait "$daemon_pid" 2>/dev/null || true
@@ -29,9 +33,15 @@ trap cleanup EXIT
 
 # NIPAP's supplemental repository provides flask-restx and flask-xml-rpc-re.
 curl -fsSLo /usr/share/keyrings/nipap.asc https://spritelink.github.io/NIPAP/nipap.gpg.key
-echo 'deb [signed-by=/usr/share/keyrings/nipap.asc] https://spritelink.github.io/NIPAP/repos/apt testing main extra' > /etc/apt/sources.list.d/nipap.list
+cat > /etc/apt/sources.list.d/nipap.sources <<'EOF'
+Types: deb
+URIs: https://spritelink.github.io/NIPAP/repos/apt
+Suites: testing
+Components: main extra
+Signed-By: /usr/share/keyrings/nipap.asc
+EOF
 apt-get update
-apt-get install -y --no-install-recommends postgresql-17 postgresql-17-ip4r ssl-cert
+apt-get install -y --no-install-recommends postgresql-17 postgresql-17-ip4r ssl-cert apache2 libapache2-mod-wsgi-py3
 pg_ctlcluster 17 main start
 
 debconf-set-selections <<'EOF'
@@ -114,3 +124,26 @@ assert any(static.rglob('*.js')) and any(static.rglob('*.css'))
 print('Installed web application login, static assets and schema checks passed.')
 PY
 /usr/bin/nipap vrf list
+
+# Exercise the documented mod_wsgi deployment, including psycopg2 imports.
+cat > /etc/apache2/sites-available/000-default.conf <<'EOF'
+<VirtualHost *:80>
+    ServerName localhost
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIScriptAlias / /etc/nipap/www/nipap-www.wsgi
+    <Directory /etc/nipap/www/>
+        Require all granted
+    </Directory>
+</VirtualHost>
+EOF
+apache2ctl configtest
+apache2ctl restart
+apache_started=true
+curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 1 \
+    http://127.0.0.1/auth/login > "$logs/apache-login.html"
+grep -q 'name="username"' "$logs/apache-login.html"
+grep -q 'rel="icon"' "$logs/apache-login.html"
+curl --fail --silent --show-error http://127.0.0.1/static/favicon.ico > "$logs/favicon.ico"
+test -s "$logs/favicon.ico"
+cp /var/log/apache2/error.log "$logs/apache-error.log"
+echo 'Installed Apache/mod_wsgi login and favicon checks passed.'

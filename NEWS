@@ -1,3 +1,14 @@
+Version 0.32.7+axians.4
+-------------------------
+
+    Dark-mode contrast fixes for login/logout messages, green action buttons
+    and dropdown menus. Add a visible Mode label and link the existing favicon.
+    Shorten the audit navigation label and page heading to Audit.
+    Update Debian 13 installation instructions to Deb822 repository sources,
+    document the Apache main-interpreter setting and audit account setup, and
+    verify the installed web application through Apache/mod_wsgi in release CI.
+    Database schema remains version 8.
+
 Version 0.32.7+axians.3
 -------------------------
  * Close pynipap XML-RPC transports after each request, including failures.

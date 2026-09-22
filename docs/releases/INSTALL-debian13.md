@@ -24,12 +24,22 @@ intended release over HTTPS.
 
 ## Install prerequisites
 
+Configure the supplemental repository using the Deb822 `.sources` format below.
+If an older `/etc/apt/sources.list.d/nipap.list` exists, remove its NIPAP repository
+entry before proceeding so the same repository is not configured twice.
+
 ```sh
 apt update
 apt install ca-certificates curl postgresql-17 postgresql-17-ip4r
 curl -fsSLo /tmp/nipap.asc https://spritelink.github.io/NIPAP/nipap.gpg.key
 install -m 0644 /tmp/nipap.asc /usr/share/keyrings/nipap.asc
-echo 'deb [signed-by=/usr/share/keyrings/nipap.asc] https://spritelink.github.io/NIPAP/repos/apt testing main extra' > /etc/apt/sources.list.d/nipap.list
+cat > /etc/apt/sources.list.d/nipap.sources <<'EOF'
+Types: deb
+URIs: https://spritelink.github.io/NIPAP/repos/apt
+Suites: testing
+Components: main extra
+Signed-By: /usr/share/keyrings/nipap.asc
+EOF
 apt update
 ```
 
@@ -112,17 +122,26 @@ apt install apache2 libapache2-mod-wsgi-py3
 Configure a virtual host with:
 
 ```apache
+WSGIApplicationGroup %{GLOBAL}
 WSGIScriptAlias / /etc/nipap/www/nipap-www.wsgi
 <Directory /etc/nipap/www/>
     Require all granted
 </Directory>
 ```
 
+`WSGIApplicationGroup %{GLOBAL}` runs the web application in the main Python
+interpreter. This avoids the psycopg2 import failure observed with Python 3.13
+under mod_wsgi subinterpreters. Add it to the HTTPS virtual host when serving
+NIPAP over HTTPS.
+
 Configure HTTPS for the virtual host, check Apache's configuration, and reload it.
 The web interface requires a trusted backend service account in `[www] xmlrpc_uri`
 and a secret key. Reuse/adapt the restored settings. Ensure the web process can read
 the required application and authentication configuration. Consult
 `docs/config-www.rst` and `docs/audit-log.rst` in the release source for details.
+The audit viewer requires both `audit_admins` and `audit_db_dsn` in `[www]`,
+with a dedicated database account granted read access to `public.ip_net_log`.
+Restart Apache after configuration changes and package upgrades, then log in again.
 
 Configure the CLI's `~/.nipaprc` with the destination server and a normal user.
 Use mode `0600` if the file contains credentials.
