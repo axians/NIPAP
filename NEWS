@@ -1,3 +1,9 @@
+Version 0.32.7+axians.3
+-------------------------
+ * Close pynipap XML-RPC transports after each request, including failures.
+ * Add regression coverage for successful requests, XML-RPC faults and HTTP errors.
+ * Keep browser login sessions unchanged; database schema remains at version 8.
+
 Version 0.32.7+axians.2
 -------------------------
  * Debian 13 packages with native systemd service and TLS startup checks.

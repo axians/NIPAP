@@ -1,3 +1,9 @@
+nipap-cli (0.32.7+axians.3-1) trixie; urgency=medium
+
+  * Release the Axians 3 package set for Debian 13.
+
+ -- soundgoof <soundgoof@gmail.com>  Tue, 22 Sep 2026 12:58:21 +0200
+
 nipap-cli (0.32.7+axians.2-1) trixie; urgency=medium
 
   * Build the Axians release for Debian 13.
