@@ -1,3 +1,10 @@
+Version 0.32.7+axians.5
+-------------------------
+
+    Fix dark-mode contrast for VRF and pool add/edit success messages.
+    Use shared success colors in both themes instead of inline backgrounds.
+    Database schema remains version 8.
+
 Version 0.32.7+axians.4
 -------------------------
 

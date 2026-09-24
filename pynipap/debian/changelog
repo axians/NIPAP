@@ -1,3 +1,9 @@
+pynipap (0.32.7+axians.5-1) trixie; urgency=medium
+
+  * Release the Axians 5 package set for Debian 13.
+
+ -- soundgoof <soundgoof@gmail.com>  Thu, 24 Sep 2026 15:47:01 +0200
+
 pynipap (0.32.7+axians.4-1) trixie; urgency=medium
 
   * Release the Axians 4 package set for Debian 13.
