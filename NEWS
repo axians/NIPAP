@@ -1,3 +1,11 @@
+Version 0.32.7+axians.6
+-------------------------
+
+    Fix dark-mode tag readability, selected tags and remove-button contrast.
+    Update Python dependency pins for PyJWT, certifi, Werkzeug, Tornado and LDAP.
+    Retain all Axians 5 fixes and Debian 13 release tooling on current master.
+    Database schema remains version 8.
+
 Version 0.32.7+axians.5
 -------------------------
 
