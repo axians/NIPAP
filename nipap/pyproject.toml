@@ -24,7 +24,7 @@ dependencies = [
   "IPy==1.01",
   "Jinja2==3.1.6",
   "MarkupSafe==3.0.2",
-  "Werkzeug==3.1.6",
+  "Werkzeug==3.1.9",
   "certifi==2024.12.14",
   "itsdangerous==2.2.0",
   "parsedatetime==2.6",
@@ -35,7 +35,7 @@ dependencies = [
   "pytz==2024.2",
   "pyjwt==2.13.0",
   "kafka-python-ng==2.2.3",
-  "tornado==6.5.7",
+  "tornado==6.5.9",
 #  "docutils==0.21.2"
 ]
 
@@ -58,7 +58,7 @@ instrumentation = [
 ]
 
 ldap_auth = [
-  "python-ldap==3.4.4"
+  "python-ldap==3.4.5"
 ]
 
 [project.urls]
