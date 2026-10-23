@@ -238,7 +238,7 @@ class AuthOptions:
 
 
 class XMLRPCConnection:
-    """ Handles a shared XML-RPC connection.
+    """ Handles XML-RPC requests and closes their transport after each call.
     """
 
     connection = None
@@ -287,6 +287,11 @@ class XMLRPCConnection:
                                                 allow_none=True)
 
         self._logger = logging.getLogger(self.__class__.__name__)
+
+    def call(self, method, *args):
+        """ Make a request and close its transport on success or failure. """
+        with self.connection as connection:
+            return getattr(connection, method)(*args)
 
 
 
@@ -367,7 +372,7 @@ class Tag(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            search_result = xmlrpc.connection.search_tag(
+            search_result = xmlrpc.call('search_tag',
                 {
                     'query': query,
                     'search_options': search_opts,
@@ -446,7 +451,7 @@ class VRF(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            vrf_list = xmlrpc.connection.list_vrf(
+            vrf_list = xmlrpc.call('list_vrf',
                 {
                     'vrf': vrf,
                     'auth': AuthOptions().options
@@ -535,7 +540,7 @@ class VRF(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            search_result = xmlrpc.connection.search_vrf(
+            search_result = xmlrpc.call('search_vrf',
                 {
                     'query': query,
                     'search_options': search_opts,
@@ -569,7 +574,7 @@ class VRF(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            smart_result = xmlrpc.connection.smart_search_vrf(
+            smart_result = xmlrpc.call('smart_search_vrf',
                 {
                     'query_string': query_string,
                     'search_options': search_options,
@@ -618,7 +623,7 @@ class VRF(Pynipap):
         if self.id is None:
             # New object, create
             try:
-                vrf = xmlrpc.connection.add_vrf(
+                vrf = xmlrpc.call('add_vrf',
                     {
                         'attr': data,
                         'auth': self._auth_opts.options
@@ -629,7 +634,7 @@ class VRF(Pynipap):
         else:
             # Old object, edit
             try:
-                vrfs = xmlrpc.connection.edit_vrf(
+                vrfs = xmlrpc.call('edit_vrf',
                     {
                         'vrf': { 'id': self.id },
                         'attr': data,
@@ -658,7 +663,7 @@ class VRF(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            xmlrpc.connection.remove_vrf(
+            xmlrpc.call('remove_vrf',
                 {
                     'vrf': { 'id': self.id },
                     'auth': self._auth_opts.options
@@ -731,7 +736,7 @@ class Pool(Pynipap):
         if self.id is None:
             # New object, create
             try:
-                pool = xmlrpc.connection.add_pool(
+                pool = xmlrpc.call('add_pool',
                     {
                         'attr': data,
                         'auth': self._auth_opts.options
@@ -742,7 +747,7 @@ class Pool(Pynipap):
         else:
             # Old object, edit
             try:
-                pools = xmlrpc.connection.edit_pool(
+                pools = xmlrpc.call('edit_pool',
                     {
                         'pool': { 'id': self.id },
                         'attr': data,
@@ -771,7 +776,7 @@ class Pool(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            xmlrpc.connection.remove_pool(
+            xmlrpc.call('remove_pool',
                 {
                     'pool': { 'id': self.id },
                     'auth': self._auth_opts.options
@@ -821,7 +826,7 @@ class Pool(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            search_result = xmlrpc.connection.search_pool(
+            search_result = xmlrpc.call('search_pool',
                 {
                     'query': query,
                     'search_options': search_opts,
@@ -856,7 +861,7 @@ class Pool(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            smart_result = xmlrpc.connection.smart_search_pool(
+            smart_result = xmlrpc.call('smart_search_pool',
                 {
                     'query_string': query_string,
                     'search_options': search_options,
@@ -936,7 +941,7 @@ class Pool(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            pool_list = xmlrpc.connection.list_pool(
+            pool_list = xmlrpc.call('list_pool',
                 {
                     'pool': spec,
                     'auth': AuthOptions().options
@@ -1044,7 +1049,7 @@ class Prefix(Pynipap):
 
         # run XML-RPC query
         try:
-            find_res = xmlrpc.connection.find_free_prefix(q)
+            find_res = xmlrpc.call('find_free_prefix', q)
         except xmlrpclib.Fault as xml_fault:
             raise _fault_to_exception(xml_fault)
         pass
@@ -1069,7 +1074,7 @@ class Prefix(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            search_result = xmlrpc.connection.search_prefix(
+            search_result = xmlrpc.call('search_prefix',
                 {
                     'query': query,
                     'search_options': search_opts,
@@ -1104,7 +1109,7 @@ class Prefix(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            smart_result = xmlrpc.connection.smart_search_prefix(
+            smart_result = xmlrpc.call('smart_search_prefix',
                 {
                     'query_string': query_string,
                     'search_options': search_options,
@@ -1143,7 +1148,7 @@ class Prefix(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            pref_list = xmlrpc.connection.list_prefix(
+            pref_list = xmlrpc.call('list_prefix',
                 {
                     'prefix': spec,
                     'auth': AuthOptions().options
@@ -1231,7 +1236,7 @@ class Prefix(Pynipap):
                 x_args['prefix_length'] = args['prefix_length']
 
             try:
-                prefix = xmlrpc.connection.add_prefix(
+                prefix = xmlrpc.call('add_prefix',
                     {
                         'attr': data,
                         'args': x_args,
@@ -1248,7 +1253,7 @@ class Prefix(Pynipap):
 
             try:
                 # save
-                prefixes = xmlrpc.connection.edit_prefix(
+                prefixes = xmlrpc.call('edit_prefix',
                     {
                         'prefix': { 'id': self.id },
                         'attr': data,
@@ -1283,7 +1288,7 @@ class Prefix(Pynipap):
 
         xmlrpc = XMLRPCConnection()
         try:
-            xmlrpc.connection.remove_prefix(
+            xmlrpc.call('remove_prefix',
                 {
                     'prefix': { 'id': self.id },
                     'recursive': recursive,
@@ -1373,7 +1378,7 @@ def nipapd_version():
 
     xmlrpc = XMLRPCConnection()
     try:
-        return xmlrpc.connection.version(
+        return xmlrpc.call('version',
             {
                 'auth': AuthOptions().options
             })
@@ -1392,7 +1397,7 @@ def nipap_db_version():
 
     xmlrpc = XMLRPCConnection()
     try:
-        return xmlrpc.connection.db_version(
+        return xmlrpc.call('db_version',
             {
                 'auth': AuthOptions().options
             })

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div style="max-width: 640px; margin: 48px auto; padding: 32px; border: 1px solid #ddd; border-radius: 6px;">
-    <h1>Audit log access required</h1>
+    <h1>Audit access required</h1>
     <p>{{ message }}</p>
     {% if session.get('user') %}
     <p><a href="{{ url_for('prefix.list') }}">Back to prefixes</a></p>

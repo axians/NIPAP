@@ -55,9 +55,14 @@ Begin by installing Apache httpd with mod_wsgi::
 
     apt-get install libapache2-mod-wsgi-py3
 
-Then, add a new virtual host or configure the default one with the line::
+Then, add a new virtual host or configure the default one with these lines::
 
+    WSGIApplicationGroup %{GLOBAL}
     WSGIScriptAlias / /etc/nipap/www/nipap-www.wsgi
+
+The application group selects the main Python interpreter, avoiding compiled
+extension import failures seen with psycopg2 under Python 3.13 subinterpreters.
+For HTTPS, add these directives to the virtual host serving NIPAP on port 443.
 
 If you are using Apache 2.4 you will also need to add the lines::
 

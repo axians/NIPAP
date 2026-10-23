@@ -19,7 +19,7 @@ FILTERS = ('username', 'vrf_id', 'prefix', 'prefix_id', 'from', 'to', 'before', 
 
 @bp.errorhandler(403)
 def access_denied(error):
-    message = ('You do not have access to the audit log. '
+    message = ('You do not have access to Audit. '
                'Please contact your NIPAP administrator to request access.')
     if request.endpoint == 'audit.entries':
         return jsonify(error=message), 403
@@ -152,7 +152,7 @@ def read_entries(filters):
                 total = cursor.fetchone()['total']
     except psycopg2.Error:
         # Do not expose database connection details in an HTTP response.
-        abort(503, description='Audit log is temporarily unavailable')
+        abort(503, description='Audit is temporarily unavailable')
     finally:
         if connection is not None:
             connection.close()

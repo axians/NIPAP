@@ -1,3 +1,34 @@
+Version 0.32.7+axians.5
+-------------------------
+
+    Fix dark-mode contrast for VRF and pool add/edit success messages.
+    Use shared success colors in both themes instead of inline backgrounds.
+    Database schema remains version 8.
+
+Version 0.32.7+axians.4
+-------------------------
+
+    Dark-mode contrast fixes for login/logout messages, green action buttons
+    and dropdown menus. Add a visible Mode label and link the existing favicon.
+    Shorten the audit navigation label and page heading to Audit.
+    Update Debian 13 installation instructions to Deb822 repository sources,
+    document the Apache main-interpreter setting and audit account setup, and
+    verify the installed web application through Apache/mod_wsgi in release CI.
+    Database schema remains version 8.
+
+Version 0.32.7+axians.3
+-------------------------
+ * Close pynipap XML-RPC transports after each request, including failures.
+ * Add regression coverage for successful requests, XML-RPC faults and HTTP errors.
+ * Keep browser login sessions unchanged; database schema remains at version 8.
+
+Version 0.32.7+axians.2
+-------------------------
+ * Debian 13 packages with native systemd service and TLS startup checks.
+ * Light/dark web themes and an administrator-only audit log viewer.
+ * Tagged releases with package installation tests and downloadable artifacts.
+ * Includes the current Axians dependency updates and database schema 8.
+
 Version 0.32.7 - Poseidon
 -------------------------
  * Modernized packaging (#1419, #1420, #1425, #1426, #1427)
